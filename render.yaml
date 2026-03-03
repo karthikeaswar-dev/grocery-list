@@ -1,8 +1,3 @@
-databases:
-  - name: grocery-db
-    plan: free
-    databaseName: grocery_list
-
 services:
   - type: web
     name: grocery-list
@@ -12,6 +7,4 @@ services:
     startCommand: node server.js
     envVars:
       - key: DATABASE_URL
-        fromDatabase:
-          name: grocery-db
-          property: connectionString
+        sync: false
