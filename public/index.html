@@ -1,0 +1,352 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Grocery List</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+      background: #f5f5f5;
+      color: #333;
+      min-height: 100vh;
+    }
+
+    .header {
+      background: #2d6a4f;
+      color: white;
+      padding: 16px 20px;
+      position: sticky;
+      top: 0;
+      z-index: 10;
+    }
+
+    .header h1 {
+      font-size: 20px;
+      font-weight: 600;
+      margin-bottom: 12px;
+    }
+
+    .tabs {
+      display: flex;
+      gap: 6px;
+    }
+
+    .tab {
+      padding: 8px 14px;
+      border: none;
+      border-radius: 20px;
+      background: rgba(255,255,255,0.15);
+      color: white;
+      font-size: 13px;
+      cursor: pointer;
+      transition: background 0.2s;
+      white-space: nowrap;
+    }
+
+    .tab:hover { background: rgba(255,255,255,0.25); }
+    .tab.active { background: white; color: #2d6a4f; font-weight: 600; }
+
+    .add-form {
+      padding: 16px 20px;
+      background: white;
+      border-bottom: 1px solid #e0e0e0;
+      display: flex;
+      gap: 8px;
+      align-items: flex-start;
+    }
+
+    .add-form .inputs {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+
+    .add-form input {
+      width: 100%;
+      padding: 10px 12px;
+      border: 1.5px solid #ddd;
+      border-radius: 8px;
+      font-size: 15px;
+      outline: none;
+      transition: border-color 0.2s;
+    }
+
+    .add-form input:focus { border-color: #2d6a4f; }
+
+    .add-form input.note-input {
+      font-size: 13px;
+      padding: 8px 12px;
+      color: #666;
+    }
+
+    .add-btn {
+      padding: 10px 18px;
+      background: #2d6a4f;
+      color: white;
+      border: none;
+      border-radius: 8px;
+      font-size: 15px;
+      font-weight: 600;
+      cursor: pointer;
+      margin-top: 1px;
+      white-space: nowrap;
+    }
+
+    .add-btn:hover { background: #1b4332; }
+    .add-btn:active { transform: scale(0.97); }
+
+    .list-container {
+      padding: 8px 12px 100px;
+    }
+
+    .item {
+      background: white;
+      border-radius: 10px;
+      padding: 14px 16px;
+      margin-bottom: 6px;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      box-shadow: 0 1px 2px rgba(0,0,0,0.05);
+      transition: opacity 0.2s;
+    }
+
+    .item.bought { opacity: 0.5; }
+
+    .item .check {
+      width: 24px;
+      height: 24px;
+      border: 2px solid #ccc;
+      border-radius: 50%;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+      transition: all 0.2s;
+    }
+
+    .item.bought .check {
+      background: #2d6a4f;
+      border-color: #2d6a4f;
+    }
+
+    .item.bought .check::after {
+      content: '✓';
+      color: white;
+      font-size: 14px;
+      font-weight: bold;
+    }
+
+    .item .details { flex: 1; min-width: 0; }
+
+    .item .item-name {
+      font-size: 15px;
+      font-weight: 500;
+      word-break: break-word;
+    }
+
+    .item.bought .item-name {
+      text-decoration: line-through;
+      color: #999;
+    }
+
+    .item .item-note {
+      font-size: 12px;
+      color: #888;
+      margin-top: 2px;
+      word-break: break-word;
+    }
+
+    .item .delete-btn {
+      background: none;
+      border: none;
+      color: #ccc;
+      font-size: 18px;
+      cursor: pointer;
+      padding: 4px 8px;
+      flex-shrink: 0;
+    }
+
+    .item .delete-btn:hover { color: #e74c3c; }
+
+    .empty-state {
+      text-align: center;
+      padding: 60px 20px;
+      color: #aaa;
+      font-size: 15px;
+    }
+
+    .clear-bought {
+      display: block;
+      margin: 16px auto;
+      padding: 10px 20px;
+      background: none;
+      border: 1.5px solid #ddd;
+      border-radius: 8px;
+      color: #888;
+      font-size: 13px;
+      cursor: pointer;
+    }
+
+    .clear-bought:hover { border-color: #e74c3c; color: #e74c3c; }
+
+    .badge {
+      background: rgba(255,255,255,0.3);
+      color: white;
+      font-size: 11px;
+      padding: 1px 7px;
+      border-radius: 10px;
+      margin-left: 4px;
+    }
+
+    .tab.active .badge {
+      background: #2d6a4f;
+      color: white;
+    }
+  </style>
+</head>
+<body>
+  <div class="header">
+    <h1>Grocery List</h1>
+    <div class="tabs" id="tabs"></div>
+  </div>
+
+  <div class="add-form">
+    <div class="inputs">
+      <input type="text" id="itemInput" placeholder="Add a grocery item..." autofocus>
+      <input type="text" id="noteInput" class="note-input" placeholder="Note (optional)">
+    </div>
+    <button class="add-btn" id="addBtn">Add</button>
+  </div>
+
+  <div class="list-container" id="listContainer"></div>
+
+  <script>
+    const LISTS = ['Ambattur (Sheila)', 'Ambattur (Hamsa)', 'Brownstone'];
+    let currentList = localStorage.getItem('primaryList') || LISTS[0];
+    let data = {};
+
+    const tabsEl = document.getElementById('tabs');
+    const itemInput = document.getElementById('itemInput');
+    const noteInput = document.getElementById('noteInput');
+    const addBtn = document.getElementById('addBtn');
+    const listContainer = document.getElementById('listContainer');
+
+    function renderTabs() {
+      tabsEl.innerHTML = LISTS.map(name => {
+        const count = (data[name] || []).filter(i => !i.bought).length;
+        const badge = count > 0 ? `<span class="badge">${count}</span>` : '';
+        return `<button class="tab ${name === currentList ? 'active' : ''}" data-list="${name}">${name}${badge}</button>`;
+      }).join('');
+    }
+
+    function renderList() {
+      const items = data[currentList] || [];
+      if (items.length === 0) {
+        listContainer.innerHTML = '<div class="empty-state">No items yet. Add something above!</div>';
+        return;
+      }
+
+      const pending = items.filter(i => !i.bought);
+      const bought = items.filter(i => i.bought);
+      const sorted = [...pending, ...bought];
+
+      let html = sorted.map(item => `
+        <div class="item ${item.bought ? 'bought' : ''}" data-id="${item.id}">
+          <div class="check" onclick="toggleBought('${item.id}')"></div>
+          <div class="details">
+            <div class="item-name">${escapeHtml(item.item)}</div>
+            ${item.note ? `<div class="item-note">${escapeHtml(item.note)}</div>` : ''}
+          </div>
+          <button class="delete-btn" onclick="deleteItem('${item.id}')">&times;</button>
+        </div>
+      `).join('');
+
+      if (bought.length > 0) {
+        html += `<button class="clear-bought" onclick="clearBought()">Clear ${bought.length} bought item${bought.length > 1 ? 's' : ''}</button>`;
+      }
+
+      listContainer.innerHTML = html;
+    }
+
+    function escapeHtml(text) {
+      const div = document.createElement('div');
+      div.textContent = text;
+      return div.innerHTML;
+    }
+
+    async function fetchData() {
+      const res = await fetch('/api/lists');
+      data = await res.json();
+      renderTabs();
+      renderList();
+    }
+
+    async function addItem() {
+      const item = itemInput.value.trim();
+      if (!item) return;
+
+      const note = noteInput.value.trim();
+      await fetch(`/api/lists/${encodeURIComponent(currentList)}/items`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ item, note })
+      });
+
+      itemInput.value = '';
+      noteInput.value = '';
+      itemInput.focus();
+      await fetchData();
+    }
+
+    async function toggleBought(itemId) {
+      await fetch(`/api/lists/${encodeURIComponent(currentList)}/items/${itemId}`, {
+        method: 'PATCH'
+      });
+      await fetchData();
+    }
+
+    async function deleteItem(itemId) {
+      await fetch(`/api/lists/${encodeURIComponent(currentList)}/items/${itemId}`, {
+        method: 'DELETE'
+      });
+      await fetchData();
+    }
+
+    async function clearBought() {
+      await fetch(`/api/lists/${encodeURIComponent(currentList)}/clear-bought`, {
+        method: 'POST'
+      });
+      await fetchData();
+    }
+
+    // Tab switching
+    tabsEl.addEventListener('click', (e) => {
+      const tab = e.target.closest('.tab');
+      if (!tab) return;
+      currentList = tab.dataset.list;
+      localStorage.setItem('primaryList', currentList);
+      renderTabs();
+      renderList();
+    });
+
+    // Add on button click or Enter
+    addBtn.addEventListener('click', addItem);
+    itemInput.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter') addItem();
+    });
+    noteInput.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter') addItem();
+    });
+
+    // Poll for updates every 5 seconds (so family members see each other's changes)
+    fetchData();
+    setInterval(fetchData, 5000);
+  </script>
+</body>
+</html>
